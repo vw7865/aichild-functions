@@ -1,0 +1,31 @@
+{
+  "name": "aichild-netlify-functions",
+  "version": "2.0.0",
+  "description": "AI Child Generation with Safety Pipeline - Netlify Functions",
+  "main": "netlify/functions/generate-baby.js",
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "echo 'No build step needed for Netlify Functions'",
+    "deploy": "netlify deploy --prod"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.7"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "ai",
+    "child",
+    "generation",
+    "netlify",
+    "functions",
+    "safety",
+    "nsfw"
+  ],
+  "author": "AI Child Team",
+  "license": "MIT"
+}
