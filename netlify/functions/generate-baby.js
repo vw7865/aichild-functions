@@ -110,7 +110,7 @@ async function testAPI() {
 async function generateBaby(momUrl, dadUrl) {
   console.log(`Generating baby from mom: ${momUrl}, dad: ${dadUrl}`);
   const result = await callReplicate(
-    "smoosh-sh/baby-mystic",
+    "smoosh-sh/baby-mystic:75b33f253f7714a281ad3e9b28f63e3232d583716ef6718f1e44a9d1f6a7e3bc",
     {
       image: momUrl,
       image2: dadUrl,
