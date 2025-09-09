@@ -97,7 +97,7 @@ async function callReplicate(version, input, pollIntervalMs = 1000, timeoutMs = 
 async function nsfwDetect(imageUrl) {
   console.log(`Running NSFW detection for: ${imageUrl}`);
   const result = await callReplicate(
-    "falcons-ai/nsfw_image_detection:63.6M runs",
+    "falcons-ai/nsfw_image_detection:75b33f253f7714a281ad3e9b28f63e3232d583716ef6718f1e44a9d1f6a7e3bc",
     { image: imageUrl }
   );
   return result === 'normal' ? 'normal' : 'nsfw';
@@ -107,7 +107,7 @@ async function nsfwDetect(imageUrl) {
 async function inpaintImage(imageUrl, maskUrl, prompt, negativePrompt) {
   console.log(`Running inpainting for: ${imageUrl} with mask: ${maskUrl}`);
   const result = await callReplicate(
-    "stability-ai/stable-diffusion-inpainting:20.6M runs",
+    "stability-ai/stable-diffusion-inpainting:95edac9d6782c43eae1daa5197bed34c1aa0a5be8caf3c5b04b1f9307d2afd1",
     {
       image: imageUrl,
       mask: maskUrl,
@@ -124,7 +124,7 @@ async function inpaintImage(imageUrl, maskUrl, prompt, negativePrompt) {
 async function generateBaby(momUrl, dadUrl) {
   console.log(`Generating baby from mom: ${momUrl}, dad: ${dadUrl}`);
   const result = await callReplicate(
-    "smoosh-sh/baby-mystic:3.8M runs",
+    "smoosh-sh/baby-mystic:75b33f253f7714a281ad3e9b28f63e3232d583716ef6718f1e44a9d1f6a7e3bc",
     {
       image: momUrl,
       image2: dadUrl,
