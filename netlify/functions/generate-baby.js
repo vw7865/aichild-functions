@@ -86,6 +86,33 @@ async function callReplicate(version, input, pollIntervalMs = 1000, timeoutMs = 
   }
 }
 
+// NSFW Detection
+async function nsfwDetect(imageUrl) {
+  console.log(`Running NSFW detection for: ${imageUrl}`);
+  const result = await callReplicate(
+    "falcons-ai/nsfw_image_detection",
+    { image: imageUrl }
+  );
+  return result === 'normal' ? 'normal' : 'nsfw';
+}
+
+// Image Inpainting
+async function inpaintImage(imageUrl, maskUrl, prompt, negativePrompt) {
+  console.log(`Running inpainting for: ${imageUrl} with mask: ${maskUrl}`);
+  const result = await callReplicate(
+    "stability-ai/stable-diffusion-inpainting",
+    {
+      image: imageUrl,
+      mask: maskUrl,
+      prompt: prompt,
+      negative_prompt: negativePrompt,
+      num_inference_steps: 50,
+      guidance_scale: 7.5
+    }
+  );
+  return result;
+}
+
 // Test function to check API connection
 async function testAPI() {
   try {
@@ -93,7 +120,7 @@ async function testAPI() {
     console.log('API Token exists:', !!REPLICATE_API_TOKEN);
     console.log('API Token length:', REPLICATE_API_TOKEN ? REPLICATE_API_TOKEN.length : 0);
     
-    // Test with a simple model
+    // Test with NSFW detection
     const result = await callReplicate(
       "falcons-ai/nsfw_image_detection",
       { image: "https://aichild.webhop.me/files/SwR4n5k0DdZjeCzTOcOizshOXv82/xNCQzC0T3ghMgGBp8YSV/mother.png" }
@@ -106,19 +133,40 @@ async function testAPI() {
   }
 }
 
-// Baby Generation
-async function generateBaby(momUrl, dadUrl) {
-  console.log(`Generating baby from mom: ${momUrl}, dad: ${dadUrl}`);
-  const result = await callReplicate(
-    "smoosh-sh/baby-mystic:75b33f253f7714a281ad3e9b28f63e3232d583716ef6718f1e44a9d1f6a7e3bc",
-    {
-      image: momUrl,
-      image2: dadUrl,
-      num_inference_steps: 50,
-      guidance_scale: 15
-    }
-  );
-  return result;
+// Safety Pipeline (without baby generation for now)
+async function runSafetyPipeline(momUrl, dadUrl) {
+  const stepsCompleted = [];
+
+  try {
+    console.log('Starting safety pipeline...');
+    
+    // 1. NSFW detection on mom image
+    console.log('Running NSFW detection on mom image...');
+    let momNsfwPrediction = await nsfwDetect(momUrl);
+    stepsCompleted.push(`mom_nsfw_check: ${momNsfwPrediction}`);
+    console.log('Mom NSFW check result:', momNsfwPrediction);
+
+    // 2. NSFW detection on dad image
+    console.log('Running NSFW detection on dad image...');
+    let dadNsfwPrediction = await nsfwDetect(dadUrl);
+    stepsCompleted.push(`dad_nsfw_check: ${dadNsfwPrediction}`);
+    console.log('Dad NSFW check result:', dadNsfwPrediction);
+
+    // 3. Return safety status
+    const isSafe = momNsfwPrediction === 'normal' && dadNsfwPrediction === 'normal';
+    
+    return { 
+      isSafe, 
+      stepsCompleted,
+      momNsfwPrediction,
+      dadNsfwPrediction,
+      message: isSafe ? 'Both parent images are safe' : 'One or both parent images flagged as NSFW'
+    };
+
+  } catch (error) {
+    console.error('Safety pipeline failed:', error);
+    throw new Error(`Safety pipeline failed: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 // Netlify Function handler
@@ -149,7 +197,7 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    console.log('Received baby generation request');
+    console.log('Received request');
     const { momUrl, dadUrl, test } = JSON.parse(event.body);
 
     // If test=true, just test the API connection
@@ -176,20 +224,20 @@ exports.handler = async (event, context) => {
       };
     }
 
-    const babyUrl = await generateBaby(momUrl, dadUrl);
+    const safetyResult = await runSafetyPipeline(momUrl, dadUrl);
 
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
-        babyUrl,
+        ...safetyResult,
         success: true,
-        message: 'Baby generated successfully'
+        message: 'Safety pipeline completed successfully'
       }),
     };
 
   } catch (error) {
-    console.error('Error in baby generation:', error);
+    console.error('Error in safety pipeline:', error);
     return {
       statusCode: 500,
       headers,
